@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ForgeDeck - TCG Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <!-- Mobile Overlay -->
+    <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div id="app-container">
+        <!-- SIDEBAR -->
+        <aside id="sidebar">
+            <!-- Header -->
+            <div class="p-6 border-b border-gray-700 bg-gray-900/50">
+                <div class="flex items-center gap-3 cursor-pointer mb-6" onclick="returnToHome()">
+                    <i id="brand-icon" class="fas fa-dragon text-red-500 text-3xl"></i>
+                    <h1 class="text-xl font-black tracking-wider text-gray-100">
+                        FORGE<span class="text-gray-400 font-light">DECK</span>
+                    </h1>
+                </div>
+
+                <!-- Game Switcher -->
+                <div class="game-switch relative rounded-full p-1 cursor-pointer w-full h-10 select-none"
+                    id="game-switch" onclick="toggleGameMode()">
+                    <div
+                        class="game-switch-slider absolute top-1 left-1 w-[calc(50%-4px)] h-[calc(100%-8px)] rounded-full transition-transform duration-300">
+                    </div>
+                    <div
+                        class="relative z-10 flex w-full h-full text-xs font-bold uppercase tracking-wider items-center">
+                        <div class="w-1/2 text-center transition-colors duration-300 text-white" id="btn-mtg">Magic
+                        </div>
+                        <div class="w-1/2 text-center transition-colors duration-300 text-gray-400" id="btn-pkmn">
+                            Pokémon</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="flex-1 p-4 space-y-6 overflow-y-auto">
+
+                <!-- Save/Load Section -->
+                <div class="flex gap-2">
+                    <button onclick="saveDeck()"
+                        class="flex-1 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-gray-300 py-1.5 rounded text-xs font-bold transition flex items-center justify-center gap-2">
+                        <i class="fas fa-save"></i> Salvar
+                    </button>
+                    <button onclick="loadDeck()"
+                        class="flex-1 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-gray-300 py-1.5 rounded text-xs font-bold transition flex items-center justify-center gap-2">
+                        <i class="fas fa-folder-open"></i> Carregar
+                    </button>
+                </div>
+
+                <!-- Search -->
+                <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase mb-2 block">Adicionar Carta Avulsa</label>
+                    <div class="relative group">
+                        <input type="text" id="card-search" placeholder="Nome da carta..."
+                            class="w-full bg-gray-800 text-gray-200 text-sm rounded-lg pl-3 pr-10 py-2.5 focus:outline-none focus:ring-1 focus:ring-red-500 border border-gray-700"
+                            onkeypress="handleSearchKey(event)">
+                        <button onclick="searchCard()"
+                            class="absolute right-0 top-0 h-full px-3 text-gray-400 hover:text-white transition-colors">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Resources -->
+                <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase mb-2 block" id="resource-label">Cores de
+                        Mana</label>
+                    <div id="resource-selector"
+                        class="resource-grid bg-gray-800/50 rounded-lg border border-gray-700/50">
+                        <!-- JS Injected -->
+                    </div>
+                </div>
+
+                <!-- Configuration -->
+                <div class="space-y-4">
+                    <!-- Build Around -->
+                    <div>
+                        <label class="text-xs font-bold text-blue-400 uppercase mb-1 block">
+                            <i class="fas fa-crown mr-1"></i> Build Around (Tribo/Chave)
+                        </label>
+                        <input type="text" id="build-around" placeholder="Ex: Elf, Goblin, Charizard..."
+                            class="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2 border border-gray-700 focus:outline-none focus:border-blue-500">
+                        <p class="text-[10px] text-gray-500 mt-1">O gerador priorizará cartas com esse nome ou tipo.</p>
+                    </div>
+
+                    <!-- Format & Strategy -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Formato</label>
+                            <select id="deck-format"
+                                class="w-full bg-gray-800 text-white text-xs rounded-lg px-2 py-2 border border-gray-700 focus:outline-none focus:border-red-500">
+                                <!-- JS Injected -->
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Estratégia</label>
+                            <select id="deck-strategy"
+                                class="w-full bg-gray-800 text-white text-xs rounded-lg px-2 py-2 border border-gray-700 focus:outline-none focus:border-red-500">
+                                <option value="balanced">Padrão</option>
+                                <option value="aggro">Aggro</option>
+                                <option value="control">Controle</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Budget Slider -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-xs font-bold text-green-400 uppercase">Orçamento Máx</label>
+                            <span id="budget-value" class="text-xs font-mono text-gray-300">Sem Limite</span>
+                        </div>
+                        <input type="range" id="budget-slider" min="0" max="1000" step="50" value="0"
+                            oninput="updateBudgetLabel(this.value)">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="p-4 border-t border-gray-700 bg-gray-900/50 space-y-2">
+                <button id="generate-btn" onclick="generateDeck()"
+                    class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-4 rounded-lg transition-all shadow-lg flex items-center justify-center gap-2 active:scale-95">
+                    <i class="fas fa-wand-magic-sparkles"></i> Gerar Deck
+                </button>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="toggleGuidePage()"
+                        class="bg-gray-800 hover:bg-gray-700 text-blue-300 font-bold py-2 px-2 rounded-lg transition-all flex items-center justify-center border border-gray-600 active:scale-95 text-xs">
+                        <i class="fas fa-book mr-1"></i> Guia
+                    </button>
+                    <button onclick="openMosaicMode()"
+                        class="bg-gray-800 hover:bg-gray-700 text-purple-300 font-bold py-2 px-2 rounded-lg transition-all flex items-center justify-center border border-gray-600 active:scale-95 text-xs">
+                        <i class="fas fa-image mr-1"></i> Visual
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main id="main-content" class="flex flex-col min-h-screen relative">
+            <!-- Header -->
+            <header
+                class="bg-gray-800/80 backdrop-blur border-b border-gray-700 p-4 sticky top-0 z-30 flex items-center justify-between">
+                <button onclick="toggleSidebar()"
+                    class="text-gray-400 hover:text-white transition p-2 rounded hover:bg-gray-700">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                <div class="flex items-center gap-3">
+                    <span id="usd-rate"
+                        class="hidden md:inline text-xs text-green-500 font-mono bg-green-900/20 px-2 py-1 rounded border border-green-800/50">USD:
+                        R$ --</span>
+                    <span id="current-mode-label"
+                        class="text-xs font-bold uppercase tracking-widest text-gray-500 border border-gray-600 px-2 py-0.5 rounded">Magic:
+                        The Gathering</span>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="p-4 md:p-8 flex-grow flex flex-col gap-6">
+                <!-- Status -->
+                <div id="status-area"
+                    class="hidden mx-auto max-w-lg text-center p-4 bg-red-900/20 border border-red-500/50 rounded-xl text-red-200 fade-in backdrop-blur-sm">
+                    <i class="fas fa-exclamation-circle mb-2 text-xl"></i>
+                    <p id="status-text"></p>
+                </div>
+
+                <!-- Dashboard -->
+                <div id="dashboard" class="grid grid-cols-1 md:grid-cols-3 gap-6 hidden fade-in">
+                    <!-- Stats -->
+                    <div
+                        class="bg-gray-800 border border-gray-700 rounded-xl p-5 shadow-xl relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <i class="fas fa-chart-pie text-6xl text-white"></i>
+                        </div>
+                        <h2 class="text-lg font-bold mb-4 text-gray-100 flex items-center gap-2">
+                            <i class="fas fa-coins text-yellow-500"></i> Resumo
+                        </h2>
+
+                        <div class="flex flex-col gap-4">
+                            <div class="flex justify-between items-end border-b border-gray-700 pb-2">
+                                <span class="text-gray-400 text-sm">Valor Estimado</span>
+                                <span id="deck-price" class="text-2xl font-bold text-green-400">R$ 0,00</span>
+                            </div>
+
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between items-center bg-gray-700/50 p-2 rounded">
+                                    <span id="label-type-1" class="text-gray-300">Criaturas</span>
+                                    <span id="stat-type-1"
+                                        class="font-bold text-green-400 bg-green-900/30 px-2 rounded">0</span>
+                                </div>
+                                <div class="flex justify-between items-center bg-gray-700/50 p-2 rounded">
+                                    <span id="label-type-2" class="text-gray-300">Mágicas</span>
+                                    <span id="stat-type-2"
+                                        class="font-bold text-blue-400 bg-blue-900/30 px-2 rounded">0</span>
+                                </div>
+                                <div class="flex justify-between items-center bg-gray-700/50 p-2 rounded">
+                                    <span id="label-type-3" class="text-gray-300">Terrenos</span>
+                                    <span id="stat-type-3"
+                                        class="font-bold text-yellow-500 bg-yellow-900/30 px-2 rounded">0</span>
+                                </div>
+                                <div class="flex justify-between text-xs text-gray-500 pt-1">
+                                    <span>Total de Cartas</span>
+                                    <span id="total-count">60</span>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-2 mt-2">
+                                <button onclick="copyToClipboard()"
+                                    class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-lg transition font-medium text-xs border border-gray-600 active:scale-95">
+                                    <i class="fas fa-copy mr-1"></i> Copiar
+                                </button>
+                                <button onclick="playtestHand()"
+                                    class="flex-1 bg-purple-600 hover:bg-purple-500 text-white py-2 rounded-lg transition font-medium text-xs border border-purple-500 active:scale-95">
+                                    <i class="fas fa-hand-sparkles mr-1"></i> Testar Mão
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chart -->
+                    <div
+                        class="bg-gray-800 border border-gray-700 rounded-xl p-5 shadow-xl col-span-1 md:col-span-2 flex flex-col">
+                        <h2 class="text-lg font-bold mb-6 text-gray-100 flex items-center gap-2">
+                            <i class="fas fa-chart-simple text-blue-500"></i> <span id="chart-title">Curva de
+                                Mana</span>
+                        </h2>
+                        <div class="flex-grow flex items-end justify-around h-40 gap-3 px-4 pb-2" id="chart-container">
+                            <!-- JS Injected -->
+                        </div>
+                        <div id="chart-labels"
+                            class="flex justify-around text-xs font-bold text-gray-500 uppercase tracking-widest mt-2 border-t border-gray-700 pt-2">
+                            <!-- JS Injected -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cards Grid -->
+                <div id="deck-display"
+                    class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 hidden pb-20 fade-in">
+                    <!-- JS Injected -->
+                </div>
+
+                <!-- Empty State -->
+                <div id="empty-state" class="flex flex-col items-center justify-center h-[60vh] text-gray-500 fade-in">
+                    <div class="relative mb-6 group cursor-pointer"
+                        onclick="toggleSidebar(); document.getElementById('resource-selector').classList.add('animate-pulse')">
+                        <i id="empty-icon"
+                            class="fas fa-layer-group text-8xl opacity-20 group-hover:opacity-30 transition-opacity"></i>
+                        <div class="absolute -bottom-2 -left-2 bg-gray-800 rounded-full p-2 border border-gray-700">
+                            <i class="fas fa-arrow-left text-red-500 animate-bounce"></i>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-300 mb-2 font-cinzel text-center">Comece sua Forja</h3>
+                    <p id="empty-text" class="text-gray-400 max-w-md text-center">Abra o menu lateral para selecionar
+                        cores e gerar seu deck.</p>
+                </div>
+
+                <!-- Loader -->
+                <div id="loading-state" class="hidden flex flex-col items-center justify-center h-[60vh] fade-in">
+                    <div class="loader mb-6"></div>
+                    <h3 class="text-xl font-bold text-white mb-2">Conjurando Cartas</h3>
+                    <p id="loading-text" class="text-gray-400 animate-pulse">Consultando o oráculo...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- GUIDE MODAL -->
+    <section id="guide-page"
+        class="hidden fixed inset-0 bg-[#0f1115] z-[60] overflow-y-auto custom-scrollbar flex flex-col">
+        <div
+            class="sticky top-0 bg-gray-900/95 backdrop-blur border-b border-gray-700 p-4 z-50 flex justify-between items-center shadow-lg">
+            <h2 class="text-xl font-bold text-white">Grimório <span id="guide-subtitle"
+                    class="text-blue-400 text-sm font-normal ml-2"></span></h2>
+            <button onclick="toggleGuidePage()" class="text-gray-400 hover:text-white px-3 py-1"><i
+                    class="fas fa-times text-xl"></i></button>
+        </div>
+        <div class="container mx-auto p-6 max-w-5xl fade-in pb-20">
+            <div id="guide-content"></div>
+        </div>
+    </section>
+
+    <!-- MOSAIC / VISUAL EXPORT MODAL -->
+    <section id="mosaic-modal" class="hidden fixed inset-0 bg-black z-[65] overflow-y-auto flex flex-col">
+        <div class="sticky top-0 bg-black/90 p-4 z-50 flex justify-between items-center border-b border-gray-800">
+            <h2 class="text-xl font-bold text-white font-cinzel">Visualização de Mesa</h2>
+            <div class="flex gap-4">
+                <span class="text-xs text-gray-500 self-center">Tire um Printscreen para salvar</span>
+                <button onclick="closeMosaicMode()" class="text-white hover:text-red-500"><i
+                        class="fas fa-times text-2xl"></i></button>
+            </div>
+        </div>
+        <div class="p-8 min-h-screen bg-gradient-to-b from-gray-900 to-black">
+            <div id="mosaic-container" class="mosaic-grid max-w-7xl mx-auto"></div>
+        </div>
+    </section>
+
+    <!-- HAND SIMULATOR MODAL -->
+    <div id="hand-modal"
+        class="hidden fixed inset-0 bg-black/90 z-[70] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-gray-800 rounded-xl border border-gray-700 w-full max-w-5xl p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-white"><i class="fas fa-hand-holding-magic mr-2 text-purple-400"></i>
+                    Mão Inicial (7 Cartas)</h3>
+                <div class="flex gap-2">
+                    <button onclick="playtestHand()"
+                        class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm"><i
+                            class="fas fa-redo"></i> Mulligan</button>
+                    <button onclick="document.getElementById('hand-modal').classList.add('hidden')"
+                        class="text-gray-400 hover:text-white px-2"><i class="fas fa-times text-xl"></i></button>
+                </div>
+            </div>
+            <div id="hand-display" class="flex flex-wrap justify-center gap-2 md:gap-4 min-h-[200px] items-center">
+            </div>
+        </div>
+    </div>
+
+    <!-- CARD PREVIEW MODAL -->
+    <div id="card-modal"
+        class="fixed inset-0 bg-black/95 z-[75] hidden flex items-center justify-center p-4 cursor-zoom-out backdrop-blur-sm"
+        onclick="closeModal()">
+        <div class="relative flex flex-col items-center animate-scale-up" onclick="event.stopPropagation()">
+            <button onclick="closeModal()"
+                class="absolute -top-12 right-0 text-white hover:text-red-500 text-3xl transition"><i
+                    class="fas fa-times"></i></button>
+            <img id="modal-img" src=""
+                class="max-h-[75vh] rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] border border-gray-700">
+            <div
+                class="mt-4 bg-gray-800/90 backdrop-blur border border-gray-600 rounded-full px-6 py-2 flex items-center gap-4 shadow-lg">
+                <div><span class="block text-xs text-gray-400 uppercase font-bold text-center">Preço</span><span
+                        id="modal-price" class="block text-xl font-bold text-green-400 text-center">--</span></div>
+                <div class="h-8 w-px bg-gray-600"></div>
+                <a id="modal-link" href="#" target="_blank"
+                    class="text-blue-400 hover:text-white transition text-sm font-bold flex items-center gap-2"><i
+                        class="fas fa-external-link-alt"></i> Detalhes</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js" defer></script>
+</body>
+
+</html>
